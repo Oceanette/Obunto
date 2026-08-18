@@ -1,0 +1,96 @@
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  background: rgba(5, 5, 5, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal__panel {
+  width: 440px;
+  background: var(--bg-panel);
+  border: var(--border-w) solid var(--line-strong);
+  position: relative;
+}
+
+.modal__panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: repeating-linear-gradient(90deg, var(--red) 0 24px, var(--ink) 24px 26px, transparent 26px 48px);
+}
+
+.modal__header {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-s);
+  padding: var(--gap-m) var(--gap-l);
+  border-bottom: var(--border-w) solid var(--line-strong);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  font-family: var(--font-grotesk);
+}
+
+.modal__index {
+  color: var(--red);
+  font-size: 10px;
+}
+
+.modal__close {
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--ink);
+}
+
+.modal__close:hover {
+  color: var(--red);
+}
+
+.modal__body {
+  padding: var(--gap-l);
+}
+
+.mic-test {
+  margin-top: var(--gap-m);
+  padding-top: var(--gap-m);
+  border-top: 1px dashed var(--line-hair);
+}
+
+.mic-test__row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--ink-soft);
+  margin-bottom: 8px;
+  font-family: var(--font-grotesk);
+}
+
+.mic-meter {
+  height: 10px;
+  border: var(--border-w) solid var(--line-strong);
+  margin-bottom: var(--gap-m);
+  overflow: hidden;
+}
+
+.mic-meter__fill {
+  height: 100%;
+  width: 0%;
+  background: var(--red);
+  transition: width 0.06s linear;
+}
+
+.mic-test__hint {
+  font-size: 11px;
+  color: var(--ink-soft);
+  margin-top: var(--gap-s);
+  line-height: 1.5;
+}

@@ -1,0 +1,228 @@
+.screen {
+  position: relative;
+  z-index: 1;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--gap-l);
+}
+
+.app {
+  position: relative;
+  z-index: 1;
+  height: 100vh;
+  display: grid;
+  grid-template-columns: 76px 240px 1fr;
+}
+
+.rail {
+  background: var(--bg-panel);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--gap-m) 0;
+  gap: var(--gap-s);
+  border-right: var(--border-w) solid var(--line-strong);
+}
+
+.rail__logo {
+  width: 40px;
+  height: 40px;
+  border: var(--border-w) solid var(--red);
+  color: var(--red);
+  font-family: var(--font-display);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--gap-s);
+}
+
+.rail__servers {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-s);
+  flex: 1;
+}
+
+.rail__add {
+  width: 40px;
+  height: 40px;
+  border: 1px dashed var(--line-hair);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.rail__add:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.channels {
+  background: var(--bg-panel-alt);
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  border-right: var(--border-w) solid var(--line-strong);
+  position: relative;
+}
+
+.channels__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: var(--gap-m) var(--gap-m) var(--gap-s);
+  border-bottom: 1px solid var(--line);
+}
+
+.channels__title {
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+
+.channels__index {
+  font-size: 10px;
+  color: var(--red);
+  letter-spacing: 0.1em;
+  font-family: var(--font-grotesk);
+}
+
+.channels__group {
+  padding: var(--gap-m) var(--gap-s) 0;
+}
+
+.channels__label {
+  display: block;
+  font-size: 10px;
+  color: var(--ink-dim);
+  letter-spacing: 0.2em;
+  padding: 0 var(--gap-s) var(--gap-xs);
+  font-family: var(--font-grotesk);
+}
+
+.channel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.profile-bar {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--gap-s);
+  padding: var(--gap-s) var(--gap-m);
+  border-top: 1px solid var(--line);
+}
+
+.profile-bar__avatar {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--bg);
+  font-weight: bold;
+  border: 1px solid var(--ink);
+  flex-shrink: 0;
+}
+
+.profile-bar__info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.profile-bar__name {
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-bar__status {
+  font-size: 9px;
+  color: var(--success);
+  letter-spacing: 0.14em;
+  font-family: var(--font-grotesk);
+}
+
+.profile-bar__settings, .profile-bar__logout {
+  background: transparent;
+  border: 1px solid var(--line-hair);
+  color: var(--ink-soft);
+  font-size: 13px;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.profile-bar__settings:hover, .profile-bar__logout:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  position: relative;
+}
+
+.main__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--gap-m) var(--gap-l);
+  border-bottom: var(--border-w) solid var(--line-strong);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+
+.main__index {
+  font-size: 10px;
+  color: var(--red-deep);
+  letter-spacing: 0.12em;
+  font-family: var(--font-grotesk);
+}
+
+.chat-status {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  padding: 4px 9px;
+  border: 1px solid var(--line-strong);
+  font-family: var(--font-grotesk);
+}
+
+.chat-status[data-state="online"] {
+  color: var(--success);
+  border-color: var(--success);
+}
+
+.chat-status[data-state="connecting"] {
+  color: var(--ink-soft);
+}
+
+.chat-status[data-state="offline"] {
+  color: var(--red);
+  border-color: var(--red);
+}
+
+.view-chat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}

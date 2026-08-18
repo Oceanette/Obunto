@@ -1,0 +1,20 @@
+[
+  {
+    "id": "u-dee5cb4f560ee18e",
+    "username": "Obunto",
+    "usernameLower": "obunto",
+    "salt": "2d03f25e769d64e2ab0871845b82a9fc",
+    "hash": "1e3e7a99ea0386fed30307bf86f9765a1fc716991e308e40dc6c7d1c723ee9bff8984d3ee47e939edb3e6f3416d2d6c1805f9467e666532827d3ebdf1893be52",
+    "color": "#5B5B5B",
+    "createdAt": 1787035578633
+  },
+  {
+    "id": "u-77e76d38856b0679",
+    "username": "Obunt0",
+    "usernameLower": "obunt0",
+    "salt": "c658829ac8527cef50abcaa569922467",
+    "hash": "7097b8661fe8a745013fe57c148567681ae5cfb627c969c8b247d10e7c82aa84ba076d0841a05a905dd822e3b97bd3016792d49fa07f47ae84d5abf2db8ec35a",
+    "color": "#5B5B5B",
+    "createdAt": 1787035586712
+  }
+]

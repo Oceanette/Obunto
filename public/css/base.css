@@ -1,0 +1,164 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  overflow: hidden;
+  position: relative;
+}
+
+::selection {
+  background: var(--red);
+  color: var(--bg);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--line-hair);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--red-deep);
+}
+
+button, input, select {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink);
+}
+
+button {
+  cursor: pointer;
+  border: var(--border-w) solid var(--line-strong);
+  background: transparent;
+  letter-spacing: 0.06em;
+  border-radius: 0;
+}
+
+input, select {
+  background: var(--bg-panel-alt);
+  border: var(--border-w) solid var(--line-strong);
+  padding: 11px 12px;
+  letter-spacing: 0.04em;
+  border-radius: 0;
+}
+
+input::placeholder {
+  color: var(--ink-dim);
+}
+
+input:focus, select:focus, button:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 2px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.bg-grid {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 42px 42px;
+  opacity: 0.7;
+}
+
+.bg-ring {
+  position: fixed;
+  top: -260px;
+  right: -260px;
+  width: 620px;
+  height: 620px;
+  border-radius: 50%;
+  border: 1px solid var(--line-hair);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.bg-ring::before, .bg-ring::after {
+  content: '';
+  position: absolute;
+  inset: 70px;
+  border-radius: 50%;
+  border: 1px dashed var(--line-hair);
+}
+
+.bg-ring::after {
+  inset: 150px;
+  border-color: var(--red);
+  border-style: solid;
+  opacity: 0.35;
+}
+
+.bg-ticks {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--line-hair) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line-hair) 1px, transparent 1px);
+  background-size: 220px 220px;
+  mask-image: radial-gradient(circle at 20% 80%, black 0%, transparent 55%);
+  opacity: 0.4;
+}
+
+.bg-noise {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.crop-corners {
+  position: relative;
+}
+
+.crop-corners::before,
+.crop-corners::after {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.crop-corners::before {
+  top: -1px;
+  left: -1px;
+  border-top: var(--border-w) solid var(--red);
+  border-left: var(--border-w) solid var(--red);
+}
+
+.crop-corners::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: var(--border-w) solid var(--red);
+  border-right: var(--border-w) solid var(--red);
+}

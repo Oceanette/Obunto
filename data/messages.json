@@ -1,0 +1,28 @@
+{
+  "text:geral": [
+    {
+      "type": "chat",
+      "roomId": "text:geral",
+      "userId": "u-77e76d38856b0679",
+      "profile": {
+        "id": "u-77e76d38856b0679",
+        "username": "Obunt0",
+        "color": "#5B5B5B"
+      },
+      "text": "Teste",
+      "ts": 1787035592910
+    },
+    {
+      "type": "chat",
+      "roomId": "text:geral",
+      "userId": "u-dee5cb4f560ee18e",
+      "profile": {
+        "id": "u-dee5cb4f560ee18e",
+        "username": "Obunto",
+        "color": "#5B5B5B"
+      },
+      "text": "Oiii",
+      "ts": 1787035596382
+    }
+  ]
+}
