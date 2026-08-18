@@ -6,6 +6,7 @@
   padding: var(--gap-l);
   position: relative;
   overflow: hidden;
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.5);
 }
 
 .auth-card::before {
@@ -35,7 +36,7 @@
   justify-content: space-between;
   font-size: 10px;
   letter-spacing: 0.16em;
-  color: var(--red);
+  color: var(--amber);
   margin-bottom: var(--gap-m);
   font-family: var(--font-grotesk);
 }
@@ -53,6 +54,7 @@
   letter-spacing: 0.01em;
   line-height: 1;
   color: var(--ink);
+  text-shadow: 0 0 46px rgba(255, 58, 26, 0.28);
 }
 
 .brand-sub {
@@ -88,7 +90,22 @@
   letter-spacing: 0.14em;
   color: var(--ink-soft);
   font-family: var(--font-grotesk);
+  position: relative;
+  overflow: hidden;
   transition: background 0.12s ease, color 0.12s ease;
+}
+
+.auth-tab::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--scan-stripe);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.auth-tab:hover::before {
+  opacity: 1;
 }
 
 .auth-tab + .auth-tab {
@@ -98,6 +115,10 @@
 .auth-tab.is-active {
   background: var(--ink);
   color: var(--bg);
+}
+
+.auth-tab.is-active::before {
+  opacity: 0;
 }
 
 .auth-error {
@@ -129,7 +150,7 @@
 }
 
 .field__hint {
-  color: var(--red);
+  color: var(--amber);
 }
 
 .field input, .field select {
@@ -168,6 +189,11 @@
   border: var(--border-w) solid transparent;
   cursor: pointer;
   position: relative;
+  transition: transform 0.12s ease;
+}
+
+.color-swatch:hover {
+  transform: translateY(-2px);
 }
 
 .color-swatch.is-selected {
@@ -194,12 +220,27 @@
   align-items: center;
   justify-content: space-between;
   margin-top: var(--gap-s);
+  position: relative;
+  overflow: hidden;
   transition: background 0.12s ease, color 0.12s ease;
+}
+
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--scan-stripe);
+  opacity: 0;
+  transition: opacity 0.15s ease;
 }
 
 .btn-primary:hover {
   background: var(--red);
   color: var(--ink);
+}
+
+.btn-primary:hover::after {
+  opacity: 1;
 }
 
 .btn-primary[data-busy="true"] {
@@ -209,10 +250,12 @@
 
 .btn-primary__arrow {
   color: var(--red);
+  transition: transform 0.15s ease, color 0.15s ease;
 }
 
 .btn-primary:hover .btn-primary__arrow {
   color: var(--ink);
+  transform: translate(2px, -2px);
 }
 
 .auth-card__footer {
@@ -238,12 +281,30 @@
   cursor: pointer;
   position: relative;
   flex-shrink: 0;
+  overflow: hidden;
   transition: border-color 0.12s ease, color 0.12s ease;
+}
+
+.rail__server::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--scan-stripe);
+  opacity: 0;
+  transition: opacity 0.15s ease;
 }
 
 .rail__server:hover, .rail__server.is-active {
   border-color: var(--red);
   color: var(--red);
+}
+
+.rail__server:hover::before {
+  opacity: 1;
+}
+
+.rail__server.is-active {
+  box-shadow: var(--glow-red);
 }
 
 .rail__server.is-active::after {
@@ -269,21 +330,37 @@
   gap: 7px;
   font-family: var(--font-grotesk);
   white-space: nowrap;
+  position: relative;
+  overflow: hidden;
   transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.channel-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--scan-stripe);
+  opacity: 0;
+  transition: opacity 0.15s ease;
 }
 
 .channel-item::after {
   content: attr(data-index);
   font-size: 8px;
-  color: var(--ink-dim);
+  color: var(--amber-deep);
   letter-spacing: 0.08em;
   font-variant-numeric: tabular-nums;
+  position: relative;
 }
 
 .channel-item:hover {
   background: var(--red-dim);
   color: var(--ink);
   border-color: var(--red);
+}
+
+.channel-item:hover::before {
+  opacity: 1;
 }
 
 .channel-item:hover::after {
@@ -327,7 +404,7 @@
 .chat-message__time {
   order: -1;
   font-size: 10px;
-  color: var(--ink-dim);
+  color: var(--amber-deep);
   font-variant-numeric: tabular-nums;
 }
 
@@ -386,11 +463,26 @@
   font-family: var(--font-grotesk);
   font-weight: bold;
   flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
   transition: background 0.12s ease;
+}
+
+.chat-input button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--scan-stripe);
+  opacity: 0;
+  transition: opacity 0.15s ease;
 }
 
 .chat-input button:hover {
   background: var(--red);
+}
+
+.chat-input button:hover::after {
+  opacity: 1;
 }
 
 .btn-secondary {
@@ -400,7 +492,22 @@
   font-size: 12px;
   letter-spacing: 0.06em;
   color: var(--ink);
+  position: relative;
+  overflow: hidden;
   transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.btn-secondary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--scan-stripe);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.btn-secondary:hover::after {
+  opacity: 1;
 }
 
 .btn-secondary[data-active="true"] {

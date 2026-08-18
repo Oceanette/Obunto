@@ -1,12 +1,11 @@
 {
   "name": "obunto",
-  "version": "0.1.0",
-  "private": true,
-  "main": "server.js",
+  "version": "1.0.0",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "deploy": "git add . && git commit -m \"Atualização automática\" && git push origin main"
   },
   "dependencies": {
-    "ws": "^8.17.0"
+    "ws": "^8.x.x"
   }
 }

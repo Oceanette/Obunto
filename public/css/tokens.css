@@ -12,8 +12,14 @@
   --red: #FF3A1A;
   --red-deep: #C2280F;
   --red-dim: rgba(255, 58, 26, 0.16);
+  --amber: #FFA53D;
+  --amber-deep: #C9791F;
+  --amber-dim: rgba(255, 165, 61, 0.16);
   --success: #3FBE8E;
   --danger: #FF5A45;
+  --glow-red: 0 0 32px rgba(255, 58, 26, 0.28);
+  --glow-amber: 0 0 26px rgba(255, 165, 61, 0.22);
+  --scan-stripe: repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.09) 0 2px, transparent 2px 9px);
   --font-mono: 'Space Mono', 'Courier New', monospace;
   --font-display: 'Archivo Black', 'Arial Black', sans-serif;
   --font-grotesk: 'Space Grotesk', 'Space Mono', monospace;

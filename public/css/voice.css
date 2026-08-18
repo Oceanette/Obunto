@@ -22,15 +22,11 @@
   border: 1px solid var(--line-hair);
   aspect-ratio: 16 / 10;
   overflow: hidden;
+  transition: border-color 0.15s ease;
 }
 
-.voice-tile::before {
-  content: '';
-  position: absolute;
-  inset: 5px;
-  border: 1px dashed var(--line-hair);
-  z-index: 1;
-  pointer-events: none;
+.voice-tile:hover {
+  border-color: var(--line-strong);
 }
 
 .voice-tile.is-expanded {
@@ -49,7 +45,26 @@
 }
 
 .voice-tile__corner {
-  display: none;
+  display: block;
+  position: absolute;
+  inset: 9px;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.55;
+  background:
+    linear-gradient(var(--red) 0 0) 0 0 / 12px 2px no-repeat,
+    linear-gradient(var(--red) 0 0) 0 0 / 2px 12px no-repeat,
+    linear-gradient(var(--red) 0 0) 100% 0 / 12px 2px no-repeat,
+    linear-gradient(var(--red) 0 0) 100% 0 / 2px 12px no-repeat,
+    linear-gradient(var(--red) 0 0) 0 100% / 12px 2px no-repeat,
+    linear-gradient(var(--red) 0 0) 0 100% / 2px 12px no-repeat,
+    linear-gradient(var(--red) 0 0) 100% 100% / 12px 2px no-repeat,
+    linear-gradient(var(--red) 0 0) 100% 100% / 2px 12px no-repeat;
+  transition: opacity 0.15s ease;
+}
+
+.voice-tile:hover .voice-tile__corner {
+  opacity: 0.9;
 }
 
 .voice-tile__video {
@@ -107,7 +122,7 @@
   right: 12px;
   font-size: 9px;
   letter-spacing: 0.16em;
-  color: var(--red);
+  color: var(--amber);
   background: rgba(10, 10, 8, 0.7);
   padding: 4px 8px;
   font-family: var(--font-grotesk);
@@ -149,6 +164,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  transition: border-color 0.12s ease, color 0.12s ease;
 }
 
 .voice-tile__ctrl-btn:hover {
@@ -193,7 +209,22 @@
   font-size: 11px;
   letter-spacing: 0.1em;
   font-family: var(--font-grotesk);
+  position: relative;
+  overflow: hidden;
   transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.voice-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--scan-stripe);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.voice-btn:hover::after {
+  opacity: 1;
 }
 
 .voice-btn[data-active="true"] {

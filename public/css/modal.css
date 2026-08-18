@@ -15,6 +15,7 @@
   background: var(--bg-panel);
   border: var(--border-w) solid var(--line-strong);
   position: relative;
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.5);
 }
 
 .modal__panel::before {
@@ -40,7 +41,7 @@
 }
 
 .modal__index {
-  color: var(--red);
+  color: var(--amber);
   font-size: 10px;
 }
 
@@ -51,10 +52,12 @@
   font-size: 18px;
   line-height: 1;
   color: var(--ink);
+  transition: color 0.12s ease, transform 0.12s ease;
 }
 
 .modal__close:hover {
   color: var(--red);
+  transform: rotate(90deg);
 }
 
 .modal__body {
@@ -88,7 +91,7 @@
 .mic-meter__fill {
   height: 100%;
   width: 0%;
-  background: var(--red);
+  background: linear-gradient(90deg, var(--amber), var(--red));
   transition: width 0.06s linear;
 }
 
