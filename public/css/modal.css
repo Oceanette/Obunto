@@ -2,14 +2,16 @@
   position: fixed;
   inset: 0;
   z-index: 10;
-  background: rgba(5, 5, 5, 0.75);
+  background: rgba(5, 5, 4, 0.78);
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: var(--gap-m);
 }
 
 .modal__panel {
   width: 440px;
+  max-width: 100%;
   background: var(--bg-panel);
   border: var(--border-w) solid var(--line-strong);
   position: relative;
@@ -21,8 +23,9 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 6px;
-  background: repeating-linear-gradient(90deg, var(--red) 0 24px, var(--ink) 24px 26px, transparent 26px 48px);
+  height: 7px;
+  background-image: repeating-linear-gradient(90deg, var(--red) 0, var(--red) 16px, transparent 16px, transparent 22px);
+  background-size: 22px 100%;
 }
 
 .modal__header {
@@ -79,6 +82,7 @@
   border: var(--border-w) solid var(--line-strong);
   margin-bottom: var(--gap-m);
   overflow: hidden;
+  background: repeating-linear-gradient(90deg, var(--line-hair) 0, var(--line-hair) 1px, transparent 1px, transparent 6px);
 }
 
 .mic-meter__fill {
@@ -93,4 +97,13 @@
   color: var(--ink-soft);
   margin-top: var(--gap-s);
   line-height: 1.5;
+}
+
+@media (max-width: 520px) {
+  .modal__body {
+    padding: var(--gap-m);
+  }
+  .modal__header {
+    padding: var(--gap-m);
+  }
 }

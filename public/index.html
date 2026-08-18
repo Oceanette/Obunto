@@ -19,7 +19,10 @@
 <div class="bg-grid"></div>
 <div class="bg-ring"></div>
 <div class="bg-ticks"></div>
+<div class="bg-lines"></div>
 <div class="bg-noise"></div>
+<span class="bg-corner bg-corner--tl">00.SIG</span>
+<span class="bg-corner bg-corner--br">OB-7000</span>
 
 <section id="screen-auth" class="screen">
   <div id="auth-card" class="auth-card" data-mode="login">
@@ -90,6 +93,15 @@
     <div class="rail__logo">OB</div>
     <div class="rail__servers" id="rail-servers"></div>
     <div class="rail__add">+</div>
+    <div class="profile-bar">
+      <div class="profile-bar__avatar" id="my-avatar"></div>
+      <div class="profile-bar__info">
+        <span class="profile-bar__name" id="my-name"></span>
+        <span class="profile-bar__status">ONLINE</span>
+      </div>
+      <button class="profile-bar__settings" id="btn-open-settings" title="Configurações de áudio">⚙</button>
+      <button class="profile-bar__logout" id="btn-logout" title="Sair da conta">⏻</button>
+    </div>
   </nav>
 
   <aside class="channels">
@@ -104,15 +116,6 @@
     <div class="channels__group">
       <span class="channels__label">VOZ</span>
       <div class="channel-list" id="voice-channels"></div>
-    </div>
-    <div class="profile-bar">
-      <div class="profile-bar__avatar" id="my-avatar"></div>
-      <div class="profile-bar__info">
-        <span class="profile-bar__name" id="my-name"></span>
-        <span class="profile-bar__status">ONLINE</span>
-      </div>
-      <button class="profile-bar__settings" id="btn-open-settings" title="Configurações de áudio">⚙</button>
-      <button class="profile-bar__logout" id="btn-logout" title="Sair da conta">⏻</button>
     </div>
   </aside>
 

@@ -24,6 +24,15 @@
   overflow: hidden;
 }
 
+.voice-tile::before {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border: 1px dashed var(--line-hair);
+  z-index: 1;
+  pointer-events: none;
+}
+
 .voice-tile.is-expanded {
   position: fixed;
   inset: var(--gap-l);
@@ -40,15 +49,7 @@
 }
 
 .voice-tile__corner {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  width: 10px;
-  height: 10px;
-  border-top: 1px solid var(--line-hair);
-  border-left: 1px solid var(--line-hair);
-  z-index: 1;
-  pointer-events: none;
+  display: none;
 }
 
 .voice-tile__video {
@@ -60,18 +61,19 @@
 
 .voice-tile__name {
   position: absolute;
-  left: 10px;
-  bottom: 10px;
+  left: 13px;
+  bottom: 13px;
   font-size: 11px;
   color: var(--ink);
-  background: rgba(10, 10, 10, 0.7);
+  background: rgba(10, 10, 8, 0.7);
   padding: 5px 9px;
   letter-spacing: 0.04em;
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   font-family: var(--font-grotesk);
   max-width: calc(100% - 90px);
+  z-index: 2;
 }
 
 .voice-tile__name span:last-child {
@@ -81,34 +83,47 @@
 }
 
 .voice-tile__dot {
-  width: 7px;
-  height: 7px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   flex-shrink: 0;
+  border: 1px solid var(--red);
+  background: transparent;
+  position: relative;
+}
+
+.voice-tile__dot::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
   background: var(--red);
+  animation: obunto-rec 1.6s ease-in-out infinite;
 }
 
 .voice-tile__tag {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 12px;
+  right: 12px;
   font-size: 9px;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.16em;
   color: var(--red);
-  background: rgba(10, 10, 10, 0.7);
-  padding: 4px 7px;
+  background: rgba(10, 10, 8, 0.7);
+  padding: 4px 8px;
   font-family: var(--font-grotesk);
+  z-index: 2;
 }
 
 .voice-tile__controls {
   position: absolute;
-  top: 8px;
-  left: 8px;
+  top: 12px;
+  left: 12px;
   display: flex;
   align-items: center;
   gap: 6px;
   opacity: 0;
   transition: opacity 0.12s ease;
+  z-index: 2;
 }
 
 .voice-tile:hover .voice-tile__controls,
@@ -116,12 +131,18 @@
   opacity: 1;
 }
 
+@media (pointer: coarse) {
+  .voice-tile__controls {
+    opacity: 1;
+  }
+}
+
 .voice-tile__ctrl-btn {
   width: 24px;
   height: 24px;
   padding: 0;
   font-size: 12px;
-  background: rgba(10, 10, 10, 0.75);
+  background: rgba(10, 10, 8, 0.75);
   border: 1px solid var(--line-hair);
   color: var(--ink);
   display: flex;
@@ -142,7 +163,7 @@
 }
 
 .voice-tile__volume {
-  background: rgba(10, 10, 10, 0.75);
+  background: rgba(10, 10, 8, 0.75);
   border: 1px solid var(--line-hair);
   padding: 0 8px;
   height: 24px;
@@ -160,7 +181,8 @@
   justify-content: center;
   gap: var(--gap-s);
   padding: var(--gap-m);
-  border-top: 1px solid var(--line);
+  border-top: 1px dashed var(--line-hair);
+  flex-wrap: wrap;
 }
 
 .voice-btn {
@@ -171,6 +193,7 @@
   font-size: 11px;
   letter-spacing: 0.1em;
   font-family: var(--font-grotesk);
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
 }
 
 .voice-btn[data-active="true"] {
@@ -186,4 +209,14 @@
 .voice-btn--leave:hover {
   background: var(--danger);
   color: var(--ink);
+}
+
+@media (max-width: 520px) {
+  .voice-tiles {
+    padding: var(--gap-m);
+    grid-template-columns: 1fr;
+  }
+  .voice-btn {
+    padding: 10px 12px;
+  }
 }

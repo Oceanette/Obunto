@@ -70,9 +70,9 @@ const OBUNTO_RTC = (() => {
 
   function attachRemoteTrack(userId, track) {
     const stream = combinedStream(userId);
-    stream.getTracks().filter(t => t.kind === track.kind).forEach(t => {
-      stream.removeTrack(t);
-    });
+    if (track.kind === 'video') {
+      stream.getTracks().filter(t => t.kind === 'video').forEach(t => stream.removeTrack(t));
+    }
     stream.addTrack(track);
     onTrackHandlers.forEach(fn => fn(userId, stream, track.kind));
 

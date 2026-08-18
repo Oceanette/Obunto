@@ -41,8 +41,9 @@ const OBUNTO_SERVERS = (() => {
     textEl.innerHTML = '';
     voiceEl.innerHTML = '';
 
-    activeServer.textChannels.forEach(ch => {
+    activeServer.textChannels.forEach((ch, i) => {
       const item = ce('div', 'channel-item');
+      item.dataset.index = String(i + 1).padStart(2, '0');
       const label = ce('span');
       label.textContent = '# ' + ch.name;
       item.appendChild(label);
@@ -54,8 +55,9 @@ const OBUNTO_SERVERS = (() => {
       textEl.appendChild(item);
     });
 
-    activeServer.voiceChannels.forEach(ch => {
+    activeServer.voiceChannels.forEach((ch, i) => {
       const item = ce('div', 'channel-item channel-item--voice');
+      item.dataset.index = String(i + 1).padStart(2, '0');
       const label = ce('span');
       label.textContent = ')))  ' + ch.name;
       item.appendChild(label);
