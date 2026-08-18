@@ -386,7 +386,18 @@ function pushMessage(roomId, message) {
 }
 
 function getHistory(roomId) {
-  return messages.get(roomId) || [];
+  const list = messages.get(roomId) || [];
+  return list.map(m => {
+    const user = findUserById(m.userId);
+    return {
+      type: m.type,
+      roomId: m.roomId,
+      userId: m.userId,
+      text: m.text,
+      ts: m.ts,
+      profile: user ? publicUser(user) : m.profile || null
+    };
+  });
 }
 
 function broadcastRoom(roomId, data, exceptWs) {
@@ -477,11 +488,13 @@ wss.on('connection', ws => {
     }
 
     if (msg.type === 'chat') {
-      if (!ws.userId || !ws.profile) return;
+      if (!ws.userId) return;
       const text = String(msg.text || '').slice(0, 2000).trim();
       if (!text) return;
-      const payload = { type: 'chat', roomId: msg.roomId, userId: ws.userId, profile: ws.profile, text, ts: Date.now() };
-      pushMessage(msg.roomId, payload);
+      const stored = { type: 'chat', roomId: msg.roomId, userId: ws.userId, text, ts: Date.now() };
+      pushMessage(msg.roomId, stored);
+      const user = findUserById(ws.userId);
+      const payload = Object.assign({}, stored, { profile: user ? publicUser(user) : ws.profile });
       broadcastRoom(msg.roomId, payload, null);
     }
 

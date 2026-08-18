@@ -7,12 +7,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/tokens.css?v=2">
-<link rel="stylesheet" href="css/base.css?v=2">
-<link rel="stylesheet" href="css/layout.css?v=2">
-<link rel="stylesheet" href="css/components.css?v=2">
-<link rel="stylesheet" href="css/voice.css?v=2">
-<link rel="stylesheet" href="css/modal.css?v=2">
+<link rel="stylesheet" href="css/tokens.css?v=3">
+<link rel="stylesheet" href="css/base.css?v=3">
+<link rel="stylesheet" href="css/layout.css?v=3">
+<link rel="stylesheet" href="css/components.css?v=3">
+<link rel="stylesheet" href="css/voice.css?v=3">
+<link rel="stylesheet" href="css/modal.css?v=3">
 </head>
 <body>
 
@@ -225,20 +225,59 @@
   </div>
 </div>
 
-<script src="js/config.js?v=2"></script>
-<script src="js/dom.js?v=2"></script>
-<script src="js/store.js?v=2"></script>
-<script src="js/auth.js?v=2"></script>
-<script src="js/audio.js?v=2"></script>
-<script src="js/signaling.js?v=2"></script>
-<script src="js/webrtc.js?v=2"></script>
-<script src="js/miccheck.js?v=2"></script>
-<script src="js/modal.js?v=2"></script>
-<script src="js/profile.js?v=2"></script>
-<script src="js/auth-screen.js?v=2"></script>
-<script src="js/servers.js?v=2"></script>
-<script src="js/chat.js?v=2"></script>
-<script src="js/voice.js?v=2"></script>
-<script src="js/main.js?v=2"></script>
+<div id="modal-avatar-crop" class="modal hidden">
+  <div class="modal__panel modal__panel--crop">
+    <div class="modal__header">
+      <span>AJUSTAR FOTO</span>
+      <span class="modal__index">06.CROP</span>
+      <button id="btn-close-crop" class="modal__close">×</button>
+    </div>
+    <div class="modal__body">
+      <div class="crop-stage" id="crop-stage">
+        <img id="crop-image" alt="">
+        <div class="crop-stage__frame"></div>
+      </div>
+      <div class="crop-zoom">
+        <span class="crop-zoom__label">ZOOM</span>
+        <input type="range" id="crop-zoom-range" min="100" max="300" value="100">
+      </div>
+      <button type="button" class="btn-primary" id="btn-confirm-crop">
+        <span>USAR ESTA FOTO</span>
+        <span class="btn-primary__arrow">↗</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="user-popover" class="user-popover hidden">
+  <div class="user-popover__banner"></div>
+  <div class="user-popover__avatar" id="popover-avatar"></div>
+  <div class="user-popover__body">
+    <div class="user-popover__name" id="popover-name"></div>
+    <div class="user-popover__tag" id="popover-tag"></div>
+    <p class="user-popover__bio" id="popover-bio"></p>
+    <div class="user-popover__meta">
+      <span>NA REDE DESDE</span>
+      <span id="popover-created"></span>
+    </div>
+  </div>
+</div>
+
+<script src="js/config.js?v=3"></script>
+<script src="js/dom.js?v=3"></script>
+<script src="js/store.js?v=3"></script>
+<script src="js/auth.js?v=3"></script>
+<script src="js/audio.js?v=3"></script>
+<script src="js/signaling.js?v=3"></script>
+<script src="js/webrtc.js?v=3"></script>
+<script src="js/miccheck.js?v=3"></script>
+<script src="js/modal.js?v=3"></script>
+<script src="js/user-popover.js?v=3"></script>
+<script src="js/profile.js?v=3"></script>
+<script src="js/auth-screen.js?v=3"></script>
+<script src="js/servers.js?v=3"></script>
+<script src="js/chat.js?v=3"></script>
+<script src="js/voice.js?v=3"></script>
+<script src="js/main.js?v=3"></script>
 </body>
 </html>

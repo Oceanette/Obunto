@@ -4,6 +4,7 @@ const OBUNTO_CHAT = (() => {
   let listenerBound = false;
   let statusListenerBound = false;
   let typingTimer = null;
+  const knownProfiles = new Map();
 
   function nameFor(profile) {
     return profile ? (profile.displayName || profile.username) : 'desconhecido';
@@ -24,6 +25,8 @@ const OBUNTO_CHAT = (() => {
   }
 
   function appendMessage(msg) {
+    if (msg.profile) knownProfiles.set(msg.userId, msg.profile);
+
     const log = qs('#chat-log');
     const row = ce('div', 'chat-message');
     row.dataset.userId = msg.userId || '';
@@ -36,10 +39,20 @@ const OBUNTO_CHAT = (() => {
 
     const avatar = ce('div', 'chat-message__avatar');
     applyAvatar(avatar, msg.profile);
+    avatar.style.cursor = 'pointer';
+    avatar.addEventListener('click', ev => {
+      ev.stopPropagation();
+      OBUNTO_POPOVER.open(knownProfiles.get(msg.userId) || msg.profile, avatar);
+    });
 
     const author = ce('span', 'chat-message__author');
     author.textContent = nameFor(msg.profile);
     author.style.color = msg.profile ? msg.profile.color : 'inherit';
+    author.style.cursor = 'pointer';
+    author.addEventListener('click', ev => {
+      ev.stopPropagation();
+      OBUNTO_POPOVER.open(knownProfiles.get(msg.userId) || msg.profile, author);
+    });
 
     const tag = ce('span', 'chat-message__tag');
     tag.textContent = msg.profile ? '#' + msg.profile.username : '';
@@ -132,6 +145,7 @@ const OBUNTO_CHAT = (() => {
         typingTimer = setTimeout(() => setTypingLabel(''), 2500);
       });
       OBUNTO_SIGNAL.on('profile-updated', msg => {
+        knownProfiles.set(msg.userId, msg.profile);
         if (msg.roomId !== currentRoomId) return;
         updateMessagesForUser(msg.userId, msg.profile);
       });

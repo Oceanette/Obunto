@@ -40,6 +40,11 @@ const OBUNTO_VOICE = (() => {
     return p ? (p.avatar || null) : null;
   }
 
+  function profileFor(userId) {
+    if (myProfile && userId === myProfile.id) return myProfile;
+    return peerProfiles.get(userId) || null;
+  }
+
   function applyMiniAvatar(el, userId) {
     if (!el) return;
     const av = avatarFor(userId);
@@ -53,12 +58,39 @@ const OBUNTO_VOICE = (() => {
     }
   }
 
+  function applyFallbackAvatar(el, userId) {
+    if (!el) return;
+    const av = avatarFor(userId);
+    if (av) {
+      el.style.backgroundImage = 'url(' + av + ')';
+      el.style.background = '';
+      el.textContent = '';
+    } else {
+      el.style.backgroundImage = '';
+      el.style.background = colorFor(userId);
+      el.textContent = labelFor(userId).slice(0, 2).toUpperCase();
+    }
+  }
+
+  function hasLiveVideo(stream) {
+    return !!(stream && stream.getVideoTracks().some(t => t.readyState === 'live'));
+  }
+
   function applyLocalAudioState(userId, videoEl) {
     if (!videoEl) return;
     const vol = localVolumes.has(userId) ? localVolumes.get(userId) : 1;
     const isMuted = localMutes.get(userId) === true;
     videoEl.volume = vol;
     videoEl.muted = isMuted;
+  }
+
+  function openProfileFor(userId, anchorEl) {
+    if (myProfile && userId === myProfile.id) {
+      OBUNTO_PROFILE.open();
+      return;
+    }
+    const profile = profileFor(userId);
+    if (profile) OBUNTO_POPOVER.open(profile, anchorEl);
   }
 
   function renderTile(userId, stream, label, isLocal, kindTag) {
@@ -72,6 +104,10 @@ const OBUNTO_VOICE = (() => {
       video.playsInline = true;
       if (isLocal) video.muted = true;
 
+      const fallback = ce('div', 'voice-tile__fallback');
+      const fallbackAvatar = ce('div', 'voice-tile__fallback-avatar');
+      fallback.appendChild(fallbackAvatar);
+
       const nameTag = ce('div', 'voice-tile__name');
       const miniAvatar = ce('div', 'voice-tile__mini-avatar');
       const dot = ce('span', 'voice-tile__dot');
@@ -79,6 +115,15 @@ const OBUNTO_VOICE = (() => {
       nameTag.appendChild(miniAvatar);
       nameTag.appendChild(dot);
       nameTag.appendChild(nameText);
+
+      const openProfileHandler = ev => {
+        ev.stopPropagation();
+        openProfileFor(userId, nameTag);
+      };
+      miniAvatar.style.cursor = 'pointer';
+      miniAvatar.addEventListener('click', openProfileHandler);
+      nameText.style.cursor = 'pointer';
+      nameText.addEventListener('click', openProfileHandler);
 
       const tag = ce('div', 'voice-tile__tag');
       tag.textContent = isLocal ? 'LOCAL' : 'REMOTO';
@@ -140,6 +185,7 @@ const OBUNTO_VOICE = (() => {
       }
 
       tile.appendChild(video);
+      tile.appendChild(fallback);
       tile.appendChild(corner);
       tile.appendChild(nameTag);
       tile.appendChild(tag);
@@ -151,10 +197,19 @@ const OBUNTO_VOICE = (() => {
     const nameEl = tile.querySelector('.voice-tile__name span:last-child');
     const miniAvatarEl = tile.querySelector('.voice-tile__mini-avatar');
     const tagEl = tile.querySelector('.voice-tile__tag');
+    const fallbackAvatarEl = tile.querySelector('.voice-tile__fallback-avatar');
     nameEl.textContent = label;
     applyMiniAvatar(miniAvatarEl, userId);
     if (kindTag) tagEl.textContent = kindTag;
-    videoEl.srcObject = stream;
+
+    const showVideo = hasLiveVideo(stream);
+    tile.classList.toggle('no-video', !showVideo);
+    if (showVideo) {
+      videoEl.srcObject = stream;
+    } else {
+      videoEl.srcObject = null;
+      applyFallbackAvatar(fallbackAvatarEl, userId);
+    }
 
     if (isLocal) {
       videoEl.muted = true;
@@ -166,7 +221,11 @@ const OBUNTO_VOICE = (() => {
 
   function removeTile(userId) {
     const tile = qs('#tile-' + userId);
-    if (tile) tile.remove();
+    if (tile) {
+      const videoEl = tile.querySelector('video');
+      if (videoEl) videoEl.srcObject = null;
+      tile.remove();
+    }
     localVolumes.delete(userId);
     localMutes.delete(userId);
     peerProfiles.delete(userId);
@@ -253,8 +312,10 @@ const OBUNTO_VOICE = (() => {
       if (!tile) return;
       const nameEl = tile.querySelector('.voice-tile__name span:last-child');
       const miniAvatarEl = tile.querySelector('.voice-tile__mini-avatar');
+      const fallbackAvatarEl = tile.querySelector('.voice-tile__fallback-avatar');
       if (nameEl) nameEl.textContent = labelFor(msg.userId);
       applyMiniAvatar(miniAvatarEl, msg.userId);
+      if (tile.classList.contains('no-video')) applyFallbackAvatar(fallbackAvatarEl, msg.userId);
     });
 
     OBUNTO_RTC.onTrack((userId, stream, kind) => {
@@ -270,6 +331,7 @@ const OBUNTO_VOICE = (() => {
     currentChannel = channel;
     currentRoomId = 'voice:' + channel.id;
     myProfile = OBUNTO_STORE.get();
+    muted = false;
 
     const prefs = OBUNTO_STORE.getAudioPrefs();
     try {
@@ -297,6 +359,13 @@ const OBUNTO_VOICE = (() => {
   async function leaveChannel() {
     if (!currentChannel) return;
 
+    if (document.fullscreenElement) {
+      try {
+        await document.exitFullscreen();
+      } catch (e) {}
+    }
+    qsa('.voice-tile.is-expanded').forEach(t => t.classList.remove('is-expanded'));
+
     OBUNTO_SIGNAL.leave(currentRoomId);
     OBUNTO_RTC.closeAll();
 
@@ -309,6 +378,7 @@ const OBUNTO_VOICE = (() => {
     camStream = null;
     currentChannel = null;
     currentRoomId = null;
+    muted = false;
     sharingScreen = false;
     sharingCam = false;
     peerProfiles.clear();

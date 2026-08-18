@@ -2,6 +2,21 @@ const OBUNTO_PROFILE = (() => {
   let pendingAvatar = null;
   let removeRequested = false;
 
+  let cropImg = null;
+  let cropNaturalW = 0;
+  let cropNaturalH = 0;
+  let cropBaseScale = 1;
+  let cropZoom = 1;
+  let cropOffsetX = 0;
+  let cropOffsetY = 0;
+  let cropDragging = false;
+  let cropStartX = 0;
+  let cropStartY = 0;
+  let cropStartOffsetX = 0;
+  let cropStartOffsetY = 0;
+  const CROP_SIZE = 280;
+  const CROP_OUTPUT = 480;
+
   function formatDate(ts) {
     if (!ts) return '—';
     const d = new Date(ts);
@@ -71,31 +86,90 @@ const OBUNTO_PROFILE = (() => {
     });
   }
 
-  function resizeImage(dataUrl, maxSize) {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => {
-        let width = img.width;
-        let height = img.height;
-        if (width > height) {
-          if (width > maxSize) {
-            height = Math.round(height * (maxSize / width));
-            width = maxSize;
-          }
-        } else if (height > maxSize) {
-          width = Math.round(width * (maxSize / height));
-          height = maxSize;
-        }
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', 0.85));
-      };
-      img.onerror = reject;
-      img.src = dataUrl;
-    });
+  function clampCropOffsets() {
+    const dispW = cropNaturalW * cropBaseScale * cropZoom;
+    const dispH = cropNaturalH * cropBaseScale * cropZoom;
+    const minX = Math.min(0, CROP_SIZE - dispW);
+    const minY = Math.min(0, CROP_SIZE - dispH);
+    cropOffsetX = Math.max(minX, Math.min(0, cropOffsetX));
+    cropOffsetY = Math.max(minY, Math.min(0, cropOffsetY));
+  }
+
+  function applyCropTransform() {
+    const dispW = cropNaturalW * cropBaseScale * cropZoom;
+    const dispH = cropNaturalH * cropBaseScale * cropZoom;
+    cropImg.style.width = dispW + 'px';
+    cropImg.style.height = dispH + 'px';
+    cropImg.style.left = cropOffsetX + 'px';
+    cropImg.style.top = cropOffsetY + 'px';
+  }
+
+  function openCropModal(dataUrl) {
+    cropImg = qs('#crop-image');
+    const img = new Image();
+    img.onload = () => {
+      cropNaturalW = img.width;
+      cropNaturalH = img.height;
+      cropBaseScale = Math.max(CROP_SIZE / cropNaturalW, CROP_SIZE / cropNaturalH);
+      cropZoom = 1;
+      qs('#crop-zoom-range').value = 100;
+      const dispW = cropNaturalW * cropBaseScale;
+      const dispH = cropNaturalH * cropBaseScale;
+      cropOffsetX = (CROP_SIZE - dispW) / 2;
+      cropOffsetY = (CROP_SIZE - dispH) / 2;
+      cropImg.src = dataUrl;
+      applyCropTransform();
+      qs('#modal-avatar-crop').classList.remove('hidden');
+    };
+    img.src = dataUrl;
+  }
+
+  function closeCropModal() {
+    qs('#modal-avatar-crop').classList.add('hidden');
+  }
+
+  function onCropZoomChange() {
+    cropZoom = Number(qs('#crop-zoom-range').value) / 100;
+    clampCropOffsets();
+    applyCropTransform();
+  }
+
+  function cropPointerDown(e) {
+    cropDragging = true;
+    const point = e.touches ? e.touches[0] : e;
+    cropStartX = point.clientX;
+    cropStartY = point.clientY;
+    cropStartOffsetX = cropOffsetX;
+    cropStartOffsetY = cropOffsetY;
+  }
+
+  function cropPointerMove(e) {
+    if (!cropDragging) return;
+    const point = e.touches ? e.touches[0] : e;
+    cropOffsetX = cropStartOffsetX + (point.clientX - cropStartX);
+    cropOffsetY = cropStartOffsetY + (point.clientY - cropStartY);
+    clampCropOffsets();
+    applyCropTransform();
+  }
+
+  function cropPointerUp() {
+    cropDragging = false;
+  }
+
+  function confirmCrop() {
+    const effectiveScale = cropBaseScale * cropZoom;
+    const sx = -cropOffsetX / effectiveScale;
+    const sy = -cropOffsetY / effectiveScale;
+    const sSize = CROP_SIZE / effectiveScale;
+    const canvas = document.createElement('canvas');
+    canvas.width = CROP_OUTPUT;
+    canvas.height = CROP_OUTPUT;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(cropImg, sx, sy, sSize, sSize, 0, 0, CROP_OUTPUT, CROP_OUTPUT);
+    pendingAvatar = canvas.toDataURL('image/jpeg', 0.88);
+    removeRequested = false;
+    renderAvatarPreview(pendingAvatar, OBUNTO_STORE.get());
+    closeCropModal();
   }
 
   async function onAvatarFileChange(e) {
@@ -104,10 +178,7 @@ const OBUNTO_PROFILE = (() => {
     clearError();
     try {
       const raw = await readFileAsDataUrl(file);
-      const resized = await resizeImage(raw, 256);
-      pendingAvatar = resized;
-      removeRequested = false;
-      renderAvatarPreview(resized, OBUNTO_STORE.get());
+      openCropModal(raw);
     } catch (err) {
       showError('Não foi possível carregar essa imagem.');
     }
@@ -180,6 +251,18 @@ const OBUNTO_PROFILE = (() => {
     qs('#input-avatar-file').addEventListener('change', onAvatarFileChange);
     qs('#btn-remove-avatar').addEventListener('click', onRemoveAvatar);
     qs('#btn-save-profile').addEventListener('click', save);
+
+    qs('#btn-close-crop').addEventListener('click', closeCropModal);
+    qs('#btn-confirm-crop').addEventListener('click', confirmCrop);
+    qs('#crop-zoom-range').addEventListener('input', onCropZoomChange);
+
+    const stage = qs('#crop-stage');
+    stage.addEventListener('mousedown', cropPointerDown);
+    window.addEventListener('mousemove', cropPointerMove);
+    window.addEventListener('mouseup', cropPointerUp);
+    stage.addEventListener('touchstart', cropPointerDown, { passive: true });
+    window.addEventListener('touchmove', cropPointerMove, { passive: true });
+    window.addEventListener('touchend', cropPointerUp);
   }
 
   return { init, open, close, renderChrome };
