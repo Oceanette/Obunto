@@ -10,6 +10,10 @@ const DATA_DIR = path.join(__dirname, 'data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const MESSAGES_FILE = path.join(DATA_DIR, 'messages.json');
 const MAX_HISTORY_PER_ROOM = 200;
+const MAX_BIO_LENGTH = 900;
+const MAX_DISPLAY_NAME_LENGTH = 32;
+const MAX_AVATAR_RAW_BYTES = 1.5 * 1024 * 1024;
+const AVATAR_DATA_URL_RE = /^data:image\/(png|jpe?g|webp|gif);base64,([A-Za-z0-9+/=]+)$/i;
 
 const MIME = {
   '.html': 'text/html',
@@ -96,6 +100,9 @@ function createUser(username, password, color) {
     salt,
     hash,
     color: COLORS.includes(color) ? color : COLORS[Math.floor(Math.random() * COLORS.length)],
+    displayName: null,
+    bio: '',
+    avatar: null,
     createdAt: Date.now()
   };
   users.set(user.usernameLower, user);
@@ -114,6 +121,10 @@ function verifyUser(username, password) {
   return user;
 }
 
+function findUserById(userId) {
+  return Array.from(users.values()).find(u => u.id === userId) || null;
+}
+
 function createSession(userId) {
   const token = crypto.randomBytes(24).toString('hex');
   sessions.set(token, { userId, createdAt: Date.now() });
@@ -123,21 +134,30 @@ function createSession(userId) {
 function sessionUser(token) {
   const session = sessions.get(token);
   if (!session) return null;
-  const user = Array.from(users.values()).find(u => u.id === session.userId);
+  const user = findUserById(session.userId);
   return user || null;
 }
 
 function publicUser(user) {
-  return { id: user.id, username: user.username, color: user.color };
+  return {
+    id: user.id,
+    username: user.username,
+    color: user.color,
+    createdAt: user.createdAt,
+    displayName: user.displayName || null,
+    bio: typeof user.bio === 'string' ? user.bio : '',
+    avatar: user.avatar || null
+  };
 }
 
-function readJsonBody(req) {
+function readJsonBody(req, maxBytes) {
+  const limit = maxBytes || 1e6;
   return new Promise((resolve, reject) => {
     let raw = '';
     let size = 0;
     req.on('data', chunk => {
       size += chunk.length;
-      if (size > 1e6) {
+      if (size > limit) {
         reject(new Error('payload_too_large'));
         req.destroy();
         return;
@@ -171,6 +191,22 @@ function getBearerToken(req) {
   if (match) return match[1];
   const url = new URL(req.url, 'http://internal');
   return url.searchParams.get('token');
+}
+
+function updateUserProfileBroadcast(userId) {
+  const user = findUserById(userId);
+  if (!user) return;
+  const pub = publicUser(user);
+  rooms.forEach((room, roomId) => {
+    let present = false;
+    room.forEach(client => {
+      if (client.userId === userId) {
+        client.profile = pub;
+        present = true;
+      }
+    });
+    if (present) broadcastRoom(roomId, { type: 'profile-updated', roomId, userId, profile: pub }, null);
+  });
 }
 
 async function handleApi(req, res, pathname) {
@@ -237,6 +273,69 @@ async function handleApi(req, res, pathname) {
     const user = token ? sessionUser(token) : null;
     if (!user) return sendJson(res, 401, { error: 'sessao_invalida' });
     return sendJson(res, 200, { user: publicUser(user) });
+  }
+
+  if (pathname === '/api/profile' && req.method === 'POST') {
+    const token = getBearerToken(req);
+    const user = token ? sessionUser(token) : null;
+    if (!user) return sendJson(res, 401, { error: 'sessao_invalida' });
+    let body;
+    try {
+      body = await readJsonBody(req);
+    } catch (e) {
+      return sendJson(res, 400, { error: 'requisicao_invalida' });
+    }
+    if (typeof body.displayName === 'string') {
+      const trimmed = body.displayName.trim();
+      if (trimmed.length > MAX_DISPLAY_NAME_LENGTH) {
+        return sendJson(res, 400, { error: 'nome_exibicao_invalido' });
+      }
+      user.displayName = trimmed.length ? trimmed : null;
+    }
+    if (typeof body.bio === 'string') {
+      if (body.bio.length > MAX_BIO_LENGTH) {
+        return sendJson(res, 400, { error: 'bio_invalida' });
+      }
+      user.bio = body.bio;
+    }
+    persistUsers();
+    updateUserProfileBroadcast(user.id);
+    return sendJson(res, 200, { user: publicUser(user) });
+  }
+
+  if (pathname === '/api/avatar' && req.method === 'POST') {
+    const token = getBearerToken(req);
+    const user = token ? sessionUser(token) : null;
+    if (!user) return sendJson(res, 401, { error: 'sessao_invalida' });
+    let body;
+    try {
+      body = await readJsonBody(req, 3 * 1024 * 1024);
+    } catch (e) {
+      return sendJson(res, 400, { error: 'requisicao_invalida' });
+    }
+    const image = body.image;
+    const match = typeof image === 'string' ? image.match(AVATAR_DATA_URL_RE) : null;
+    if (!match) {
+      return sendJson(res, 400, { error: 'imagem_invalida' });
+    }
+    const raw = Buffer.from(match[2], 'base64');
+    if (raw.length > MAX_AVATAR_RAW_BYTES) {
+      return sendJson(res, 400, { error: 'imagem_grande' });
+    }
+    user.avatar = image;
+    persistUsers();
+    updateUserProfileBroadcast(user.id);
+    return sendJson(res, 200, { avatar: user.avatar });
+  }
+
+  if (pathname === '/api/avatar/remove' && req.method === 'POST') {
+    const token = getBearerToken(req);
+    const user = token ? sessionUser(token) : null;
+    if (!user) return sendJson(res, 401, { error: 'sessao_invalida' });
+    user.avatar = null;
+    persistUsers();
+    updateUserProfileBroadcast(user.id);
+    return sendJson(res, 200, { ok: true });
   }
 
   sendJson(res, 404, { error: 'nao_encontrado' });
