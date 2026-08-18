@@ -52,5 +52,28 @@ const OBUNTO_AUTH = (() => {
     });
   }
 
-  return { colors, checkUsername, register, login, logout, me };
+  function updateProfile(token, displayName, bio) {
+    return request('/profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ displayName, bio })
+    });
+  }
+
+  function uploadAvatar(token, image) {
+    return request('/avatar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ image })
+    });
+  }
+
+  function removeAvatar(token) {
+    return request('/avatar/remove', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + token }
+    });
+  }
+
+  return { colors, checkUsername, register, login, logout, me, updateProfile, uploadAvatar, removeAvatar };
 })();

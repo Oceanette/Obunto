@@ -94,11 +94,13 @@
     <div class="rail__servers" id="rail-servers"></div>
     <div class="rail__add">+</div>
     <div class="profile-bar">
-      <div class="profile-bar__avatar" id="my-avatar"></div>
-      <div class="profile-bar__info">
-        <span class="profile-bar__name" id="my-name"></span>
-        <span class="profile-bar__status">ONLINE</span>
-      </div>
+      <button type="button" class="profile-bar__trigger" id="btn-open-profile" title="Seu perfil">
+        <div class="profile-bar__avatar" id="my-avatar"></div>
+        <div class="profile-bar__info">
+          <span class="profile-bar__name" id="my-name"></span>
+          <span class="profile-bar__tag" id="my-tag"></span>
+        </div>
+      </button>
       <button class="profile-bar__settings" id="btn-open-settings" title="Configurações de áudio">⚙</button>
       <button class="profile-bar__logout" id="btn-logout" title="Sair da conta">⏻</button>
     </div>
@@ -176,6 +178,53 @@
   </div>
 </div>
 
+<div id="modal-profile" class="modal hidden">
+  <div class="modal__panel modal__panel--profile">
+    <div class="modal__header">
+      <span>PERFIL DO USUÁRIO</span>
+      <span class="modal__index">05.PRF</span>
+      <button id="btn-close-profile" class="modal__close">×</button>
+    </div>
+    <div class="modal__body">
+      <div class="profile-edit__avatar-row">
+        <div class="profile-edit__avatar" id="profile-avatar-preview" title="Clique para alterar a foto"></div>
+        <div class="profile-edit__avatar-actions">
+          <input type="file" id="input-avatar-file" accept="image/png,image/jpeg,image/webp,image/gif" class="hidden">
+          <button type="button" class="btn-secondary" id="btn-choose-avatar">ALTERAR FOTO</button>
+          <button type="button" class="btn-secondary" id="btn-remove-avatar">REMOVER FOTO</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>NOME DE EXIBIÇÃO <span class="field__hint">/ COMO VOCÊ QUER SER CHAMADO</span></label>
+        <input id="input-display-name" type="text" maxlength="32" placeholder="APELIDO">
+      </div>
+
+      <div class="field">
+        <label>IDENTIFICADOR ÚNICO</label>
+        <div class="profile-edit__tag" id="profile-username-tag"></div>
+      </div>
+
+      <div class="field">
+        <label>BIOGRAFIA <span class="field__hint" id="bio-counter">0 / 900</span></label>
+        <textarea id="input-bio" maxlength="900" rows="4" placeholder="FALE UM POUCO SOBRE VOCÊ..."></textarea>
+      </div>
+
+      <div class="profile-edit__meta">
+        <span>CONTA CRIADA EM</span>
+        <span id="profile-created-at">—</span>
+      </div>
+
+      <p id="profile-error" class="auth-error hidden"></p>
+
+      <button type="button" class="btn-primary" id="btn-save-profile">
+        <span>SALVAR ALTERAÇÕES</span>
+        <span class="btn-primary__arrow">↗</span>
+      </button>
+    </div>
+  </div>
+</div>
+
 <script src="js/config.js"></script>
 <script src="js/dom.js"></script>
 <script src="js/store.js"></script>
@@ -185,6 +234,7 @@
 <script src="js/webrtc.js"></script>
 <script src="js/miccheck.js"></script>
 <script src="js/modal.js"></script>
+<script src="js/profile.js"></script>
 <script src="js/auth-screen.js"></script>
 <script src="js/servers.js"></script>
 <script src="js/chat.js"></script>

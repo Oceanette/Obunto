@@ -96,11 +96,16 @@ const OBUNTO_AUTH_SCREEN = (() => {
   function enterApp(profile) {
     qs('#screen-auth').classList.add('hidden');
     qs('#screen-app').classList.remove('hidden');
-    qs('#my-name').textContent = profile.username;
-    const av = qs('#my-avatar');
-    av.textContent = profile.username.slice(0, 2).toUpperCase();
-    av.style.background = profile.color;
-    OBUNTO_STORE.save({ id: profile.id, username: profile.username, color: profile.color });
+    OBUNTO_STORE.save({
+      id: profile.id,
+      username: profile.username,
+      color: profile.color,
+      displayName: profile.displayName || null,
+      bio: profile.bio || '',
+      avatar: profile.avatar || null,
+      createdAt: profile.createdAt || null
+    });
+    OBUNTO_PROFILE.renderChrome(OBUNTO_STORE.get());
     if (typeof OBUNTO_MAIN_READY === 'function') OBUNTO_MAIN_READY();
   }
 

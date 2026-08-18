@@ -5,24 +5,71 @@ const OBUNTO_CHAT = (() => {
   let statusListenerBound = false;
   let typingTimer = null;
 
+  function nameFor(profile) {
+    return profile ? (profile.displayName || profile.username) : 'desconhecido';
+  }
+
+  function applyAvatar(el, profile) {
+    if (profile && profile.avatar) {
+      el.style.backgroundImage = 'url(' + profile.avatar + ')';
+      el.classList.add('has-image');
+      el.style.background = '';
+      el.textContent = '';
+    } else {
+      el.style.backgroundImage = '';
+      el.classList.remove('has-image');
+      el.style.background = profile ? profile.color : 'var(--ink-soft)';
+      el.textContent = nameFor(profile).slice(0, 2).toUpperCase();
+    }
+  }
+
   function appendMessage(msg) {
     const log = qs('#chat-log');
     const row = ce('div', 'chat-message');
-    const meta = ce('div', 'chat-message__meta');
-    const author = ce('span', 'chat-message__author');
-    author.textContent = msg.profile ? msg.profile.username : 'desconhecido';
-    author.style.color = msg.profile ? msg.profile.color : 'inherit';
+    row.dataset.userId = msg.userId || '';
+
+    const head = ce('div', 'chat-message__head');
+
     const time = ce('span', 'chat-message__time');
     const date = new Date(msg.ts || Date.now());
     time.textContent = String(date.getHours()).padStart(2, '0') + ':' + String(date.getMinutes()).padStart(2, '0');
-    meta.appendChild(author);
-    meta.appendChild(time);
+
+    const avatar = ce('div', 'chat-message__avatar');
+    applyAvatar(avatar, msg.profile);
+
+    const author = ce('span', 'chat-message__author');
+    author.textContent = nameFor(msg.profile);
+    author.style.color = msg.profile ? msg.profile.color : 'inherit';
+
+    const tag = ce('span', 'chat-message__tag');
+    tag.textContent = msg.profile ? '#' + msg.profile.username : '';
+
+    head.appendChild(time);
+    head.appendChild(avatar);
+    head.appendChild(author);
+    head.appendChild(tag);
+
     const text = ce('div', 'chat-message__text');
     text.textContent = msg.text;
-    row.appendChild(meta);
+
+    row.appendChild(head);
     row.appendChild(text);
     log.appendChild(row);
     log.scrollTop = log.scrollHeight;
+  }
+
+  function updateMessagesForUser(userId, profile) {
+    qsa('.chat-message[data-user-id="' + userId + '"]').forEach(row => {
+      const author = row.querySelector('.chat-message__author');
+      const tag = row.querySelector('.chat-message__tag');
+      const avatar = row.querySelector('.chat-message__avatar');
+      if (author) {
+        author.textContent = nameFor(profile);
+        author.style.color = profile.color;
+      }
+      if (tag) tag.textContent = '#' + profile.username;
+      if (avatar) applyAvatar(avatar, profile);
+    });
   }
 
   function renderHistory(list) {
@@ -80,9 +127,13 @@ const OBUNTO_CHAT = (() => {
       });
       OBUNTO_SIGNAL.on('typing', msg => {
         if (msg.roomId !== currentRoomId || !msg.profile) return;
-        setTypingLabel(msg.profile.username + ' está digitando...');
+        setTypingLabel(nameFor(msg.profile) + ' está digitando...');
         clearTimeout(typingTimer);
         typingTimer = setTimeout(() => setTypingLabel(''), 2500);
+      });
+      OBUNTO_SIGNAL.on('profile-updated', msg => {
+        if (msg.roomId !== currentRoomId) return;
+        updateMessagesForUser(msg.userId, msg.profile);
       });
       listenerBound = true;
     }

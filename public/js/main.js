@@ -15,5 +15,6 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   OBUNTO_MODAL.init();
+  OBUNTO_PROFILE.init();
   OBUNTO_AUTH_SCREEN.init();
 });

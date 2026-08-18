@@ -61,7 +61,7 @@ body::after {
   background: var(--red-deep);
 }
 
-button, input, select {
+button, input, select, textarea {
   font-family: var(--font-mono);
   font-size: 13px;
   color: var(--ink);
@@ -75,7 +75,7 @@ button {
   border-radius: 0;
 }
 
-input, select {
+input, select, textarea {
   background: var(--bg-panel-alt);
   border: var(--border-w) solid var(--line-strong);
   padding: 11px 12px;
@@ -84,11 +84,16 @@ input, select {
   transition: border-color 0.12s ease, box-shadow 0.12s ease;
 }
 
-input::placeholder {
+textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
+
+input::placeholder, textarea::placeholder {
   color: var(--ink-dim);
 }
 
-input:focus, select:focus {
+input:focus, select:focus, textarea:focus {
   border-color: var(--red);
   box-shadow: 0 0 0 1px var(--red-dim);
   outline: none;

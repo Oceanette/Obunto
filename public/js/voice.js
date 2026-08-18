@@ -23,13 +23,34 @@ const OBUNTO_VOICE = (() => {
   }
 
   function labelFor(userId) {
+    if (myProfile && userId === myProfile.id) return myProfile.displayName || myProfile.username;
     const p = peerProfiles.get(userId);
-    return p ? p.username : 'unidade-' + userId.slice(-4);
+    return p ? (p.displayName || p.username) : 'unidade-' + userId.slice(-4);
   }
 
   function colorFor(userId) {
+    if (myProfile && userId === myProfile.id) return myProfile.color;
     const p = peerProfiles.get(userId);
     return p ? p.color : 'var(--ink-soft)';
+  }
+
+  function avatarFor(userId) {
+    if (myProfile && userId === myProfile.id) return myProfile.avatar || null;
+    const p = peerProfiles.get(userId);
+    return p ? (p.avatar || null) : null;
+  }
+
+  function applyMiniAvatar(el, userId) {
+    if (!el) return;
+    const av = avatarFor(userId);
+    if (av) {
+      el.style.backgroundImage = 'url(' + av + ')';
+      el.classList.add('has-image');
+    } else {
+      el.style.backgroundImage = '';
+      el.classList.remove('has-image');
+      el.style.background = colorFor(userId);
+    }
   }
 
   function applyLocalAudioState(userId, videoEl) {
@@ -52,8 +73,10 @@ const OBUNTO_VOICE = (() => {
       if (isLocal) video.muted = true;
 
       const nameTag = ce('div', 'voice-tile__name');
+      const miniAvatar = ce('div', 'voice-tile__mini-avatar');
       const dot = ce('span', 'voice-tile__dot');
       const nameText = ce('span');
+      nameTag.appendChild(miniAvatar);
       nameTag.appendChild(dot);
       nameTag.appendChild(nameText);
 
@@ -126,10 +149,10 @@ const OBUNTO_VOICE = (() => {
 
     const videoEl = tile.querySelector('video');
     const nameEl = tile.querySelector('.voice-tile__name span:last-child');
-    const dotEl = tile.querySelector('.voice-tile__dot');
+    const miniAvatarEl = tile.querySelector('.voice-tile__mini-avatar');
     const tagEl = tile.querySelector('.voice-tile__tag');
     nameEl.textContent = label;
-    if (dotEl) dotEl.style.background = colorFor(userId);
+    applyMiniAvatar(miniAvatarEl, userId);
     if (kindTag) tagEl.textContent = kindTag;
     videoEl.srcObject = stream;
 
@@ -177,6 +200,11 @@ const OBUNTO_VOICE = (() => {
     if (profile) peerProfiles.set(userId, profile);
   }
 
+  function localLabel(suffix) {
+    const base = myProfile.displayName || myProfile.username;
+    return suffix ? base + ' (' + suffix + ')' : base;
+  }
+
   function rejoinRoom() {
     if (!currentChannel || !currentRoomId) return;
     OBUNTO_RTC.closeAll();
@@ -218,6 +246,17 @@ const OBUNTO_VOICE = (() => {
       removeTile(msg.userId);
     });
 
+    OBUNTO_SIGNAL.on('profile-updated', msg => {
+      if (msg.roomId !== currentRoomId) return;
+      registerProfile(msg.userId, msg.profile);
+      const tile = qs('#tile-' + msg.userId);
+      if (!tile) return;
+      const nameEl = tile.querySelector('.voice-tile__name span:last-child');
+      const miniAvatarEl = tile.querySelector('.voice-tile__mini-avatar');
+      if (nameEl) nameEl.textContent = labelFor(msg.userId);
+      applyMiniAvatar(miniAvatarEl, msg.userId);
+    });
+
     OBUNTO_RTC.onTrack((userId, stream, kind) => {
       renderTile(userId, stream, labelFor(userId), false);
     });
@@ -243,7 +282,7 @@ const OBUNTO_VOICE = (() => {
     qs('#view-voice').classList.remove('hidden');
     qs('#channel-title').textContent = ')))  ' + channel.name;
     qs('#voice-tiles').innerHTML = '';
-    renderTile(myProfile.id, localStream, myProfile.username + ' (você)', true, 'LOCAL');
+    renderTile(myProfile.id, localStream, localLabel('você'), true, 'LOCAL');
 
     OBUNTO_RTC.setLocalStream(localStream);
     OBUNTO_RTC.setRoom(currentRoomId);
@@ -302,7 +341,7 @@ const OBUNTO_VOICE = (() => {
       }
       const track = camStream.getVideoTracks()[0];
       OBUNTO_RTC.addTrack(track, camStream);
-      renderTile(myProfile.id, camStream, myProfile.username + ' (câmera)', true, 'LOCAL');
+      renderTile(myProfile.id, camStream, localLabel('câmera'), true, 'LOCAL');
       sharingCam = true;
       btn.dataset.active = 'true';
     } else {
@@ -310,7 +349,7 @@ const OBUNTO_VOICE = (() => {
       if (camStream) camStream.getTracks().forEach(t => t.stop());
       camStream = null;
       sharingCam = false;
-      renderTile(myProfile.id, localStream, myProfile.username + ' (você)', true, 'LOCAL');
+      renderTile(myProfile.id, localStream, localLabel('você'), true, 'LOCAL');
       btn.dataset.active = 'false';
     }
   }
@@ -336,7 +375,7 @@ const OBUNTO_VOICE = (() => {
       const screenAudioTrack = screenStream.getAudioTracks()[0];
       if (screenAudioTrack) OBUNTO_RTC.addTrack(screenAudioTrack, screenStream);
 
-      renderTile(myProfile.id, screenStream, myProfile.username + ' (tela)', true, 'LOCAL');
+      renderTile(myProfile.id, screenStream, localLabel('tela'), true, 'LOCAL');
       videoTrack.onended = () => toggleScreen();
       sharingScreen = true;
       btn.dataset.active = 'true';
@@ -348,7 +387,7 @@ const OBUNTO_VOICE = (() => {
       }
       screenStream = null;
       sharingScreen = false;
-      renderTile(myProfile.id, localStream, myProfile.username + ' (você)', true, 'LOCAL');
+      renderTile(myProfile.id, localStream, localLabel('você'), true, 'LOCAL');
       btn.dataset.active = 'false';
     }
   }
