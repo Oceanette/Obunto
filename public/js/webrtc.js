@@ -1,7 +1,8 @@
 const OBUNTO_RTC = (() => {
   const peers = new Map();
   const remoteStreams = new Map();
-  const audioMixers = new Map();
+  const audioRegistry = new Map();
+  const extraTracks = new Map();
   let localStream = null;
   let currentRoomId = null;
   const onTrackHandlers = [];
@@ -31,10 +32,14 @@ const OBUNTO_RTC = (() => {
   }
 
   function addTrack(track, stream) {
+    extraTracks.set(track, stream);
     peers.forEach(pc => pc.addTrack(track, stream));
   }
 
   function removeTrackByKind(kind) {
+    Array.from(extraTracks.keys()).forEach(track => {
+      if (track.kind === kind) extraTracks.delete(track);
+    });
     peers.forEach(pc => {
       pc.getSenders().forEach(sender => {
         if (sender.track && sender.track.kind === kind) pc.removeTrack(sender);
@@ -43,6 +48,7 @@ const OBUNTO_RTC = (() => {
   }
 
   function removeSpecificTrack(track) {
+    extraTracks.delete(track);
     peers.forEach(pc => {
       pc.getSenders().forEach(sender => {
         if (sender.track === track) pc.removeTrack(sender);
@@ -69,40 +75,81 @@ const OBUNTO_RTC = (() => {
     return stream;
   }
 
-  function getAudioMixer(userId) {
-    let mixer = audioMixers.get(userId);
-    if (!mixer) {
+  function getAudioEntry(userId) {
+    let entry = audioRegistry.get(userId);
+    if (!entry) {
+      entry = { tracks: new Set(), mixer: null };
+      audioRegistry.set(userId, entry);
+    }
+    return entry;
+  }
+
+  function teardownMixer(entry) {
+    if (!entry.mixer) return;
+    entry.mixer.sources.forEach(node => node.disconnect());
+    entry.mixer.sources.clear();
+    entry.mixer.dest.disconnect();
+    entry.mixer.ctx.close().catch(() => {});
+    entry.mixer = null;
+  }
+
+  function rebuildAudioForUser(userId) {
+    const stream = combinedStream(userId);
+    const entry = audioRegistry.get(userId);
+
+    if (!entry || entry.tracks.size === 0) {
+      if (entry) teardownMixer(entry);
+      stream.getTracks().filter(t => t.kind === 'audio').forEach(t => stream.removeTrack(t));
+      onTrackHandlers.forEach(fn => fn(userId, stream, 'audio'));
+      return;
+    }
+
+    if (entry.tracks.size === 1) {
+      teardownMixer(entry);
+      const onlyTrack = Array.from(entry.tracks)[0];
+      stream.getTracks().filter(t => t.kind === 'audio' && t !== onlyTrack).forEach(t => stream.removeTrack(t));
+      if (stream.getTracks().indexOf(onlyTrack) === -1) stream.addTrack(onlyTrack);
+      onTrackHandlers.forEach(fn => fn(userId, stream, 'audio'));
+      return;
+    }
+
+    if (!entry.mixer) {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       const ctx = new AudioCtx();
       const dest = ctx.createMediaStreamDestination();
-      mixer = { ctx, dest, sources: new Map() };
-      audioMixers.set(userId, mixer);
+      entry.mixer = { ctx, dest, sources: new Map() };
     }
-    if (mixer.ctx.state === 'suspended') mixer.ctx.resume().catch(() => {});
-    return mixer;
+    if (entry.mixer.ctx.state === 'suspended') entry.mixer.ctx.resume().catch(() => {});
+
+    entry.tracks.forEach(track => {
+      if (!entry.mixer.sources.has(track)) {
+        const sourceNode = entry.mixer.ctx.createMediaStreamSource(new MediaStream([track]));
+        sourceNode.connect(entry.mixer.dest);
+        entry.mixer.sources.set(track, sourceNode);
+      }
+    });
+
+    const mergedTrack = entry.mixer.dest.stream.getAudioTracks()[0];
+    stream.getTracks().filter(t => t.kind === 'audio' && t !== mergedTrack).forEach(t => stream.removeTrack(t));
+    if (stream.getTracks().indexOf(mergedTrack) === -1) stream.addTrack(mergedTrack);
+    onTrackHandlers.forEach(fn => fn(userId, stream, 'audio'));
   }
 
   function attachRemoteAudioTrack(userId, track) {
-    const stream = combinedStream(userId);
-    const mixer = getAudioMixer(userId);
-
-    const sourceStream = new MediaStream([track]);
-    const sourceNode = mixer.ctx.createMediaStreamSource(sourceStream);
-    sourceNode.connect(mixer.dest);
-    mixer.sources.set(track, sourceNode);
-
-    const mergedTrack = mixer.dest.stream.getAudioTracks()[0];
-    stream.getTracks().filter(t => t.kind === 'audio' && t !== mergedTrack).forEach(t => stream.removeTrack(t));
-    if (stream.getTracks().indexOf(mergedTrack) === -1) stream.addTrack(mergedTrack);
-
-    onTrackHandlers.forEach(fn => fn(userId, stream, 'audio'));
+    const entry = getAudioEntry(userId);
+    entry.tracks.add(track);
+    rebuildAudioForUser(userId);
 
     track.addEventListener('ended', () => {
-      const node = mixer.sources.get(track);
-      if (node) {
-        node.disconnect();
-        mixer.sources.delete(track);
+      entry.tracks.delete(track);
+      if (entry.mixer) {
+        const node = entry.mixer.sources.get(track);
+        if (node) {
+          node.disconnect();
+          entry.mixer.sources.delete(track);
+        }
       }
+      rebuildAudioForUser(userId);
     });
   }
 
@@ -139,6 +186,9 @@ const OBUNTO_RTC = (() => {
     if (localStream) {
       localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
     }
+    extraTracks.forEach((stream, track) => {
+      pc.addTrack(track, stream);
+    });
 
     pc.onicecandidate = e => {
       if (e.candidate) OBUNTO_SIGNAL.signal(currentRoomId, userId, { kind: 'ice', candidate: e.candidate });
@@ -205,14 +255,12 @@ const OBUNTO_RTC = (() => {
     }
   }
 
-  function teardownAudioMixer(userId) {
-    const mixer = audioMixers.get(userId);
-    if (!mixer) return;
-    mixer.sources.forEach(node => node.disconnect());
-    mixer.sources.clear();
-    mixer.dest.disconnect();
-    mixer.ctx.close().catch(() => {});
-    audioMixers.delete(userId);
+  function teardownAudioForUser(userId) {
+    const entry = audioRegistry.get(userId);
+    if (!entry) return;
+    teardownMixer(entry);
+    entry.tracks.clear();
+    audioRegistry.delete(userId);
   }
 
   function removePeer(userId) {
@@ -222,7 +270,7 @@ const OBUNTO_RTC = (() => {
       peers.delete(userId);
     }
     remoteStreams.delete(userId);
-    teardownAudioMixer(userId);
+    teardownAudioForUser(userId);
     onLeaveHandlers.forEach(fn => fn(userId));
   }
 
@@ -230,7 +278,7 @@ const OBUNTO_RTC = (() => {
     peers.forEach(pc => pc.close());
     peers.clear();
     remoteStreams.clear();
-    Array.from(audioMixers.keys()).forEach(teardownAudioMixer);
+    Array.from(audioRegistry.keys()).forEach(teardownAudioForUser);
   }
 
   function onTrack(fn) {
