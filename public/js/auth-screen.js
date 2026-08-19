@@ -94,8 +94,12 @@ const OBUNTO_AUTH_SCREEN = (() => {
   }
 
   function enterApp(profile) {
-    qs('#screen-auth').classList.add('hidden');
-    qs('#screen-app').classList.remove('hidden');
+    OBUNTO_LOADING.show('ACESSANDO SISTEMA', [
+      'AUTENTICANDO UNIDADE',
+      'SINCRONIZANDO PERFIL',
+      'CARREGANDO CANAIS',
+      'ESTABELECENDO SINAL'
+    ]);
     OBUNTO_STORE.save({
       id: profile.id,
       username: profile.username,
@@ -105,8 +109,11 @@ const OBUNTO_AUTH_SCREEN = (() => {
       avatar: profile.avatar || null,
       createdAt: profile.createdAt || null
     });
+    qs('#screen-auth').classList.add('hidden');
+    qs('#screen-app').classList.remove('hidden');
     OBUNTO_PROFILE.renderChrome(OBUNTO_STORE.get());
     if (typeof OBUNTO_MAIN_READY === 'function') OBUNTO_MAIN_READY();
+    setTimeout(() => OBUNTO_LOADING.hide(), 1300);
   }
 
   function setBusy(form, busy) {
@@ -161,15 +168,19 @@ const OBUNTO_AUTH_SCREEN = (() => {
   }
 
   function logout() {
+    OBUNTO_LOADING.show('ENCERRANDO SESSÃO', ['FECHANDO CANAIS', 'LIMPANDO CONEXÕES', 'REVOGANDO TOKEN']);
     const token = OBUNTO_STORE.getToken();
     if (token) OBUNTO_AUTH.logout(token).catch(() => {});
     OBUNTO_STORE.clearToken();
     OBUNTO_STORE.clear();
     if (typeof OBUNTO_SIGNAL !== 'undefined') OBUNTO_SIGNAL.disconnect();
-    qs('#screen-app').classList.add('hidden');
-    qs('#screen-auth').classList.remove('hidden');
-    qs('#input-login-password').value = '';
-    setMode('login');
+    setTimeout(() => {
+      qs('#screen-app').classList.add('hidden');
+      qs('#screen-auth').classList.remove('hidden');
+      qs('#input-login-password').value = '';
+      setMode('login');
+      OBUNTO_LOADING.hide();
+    }, 1100);
   }
 
   async function trySessionRestore() {

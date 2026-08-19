@@ -93,6 +93,17 @@ const OBUNTO_VOICE = (() => {
     if (profile) OBUNTO_POPOVER.open(profile, anchorEl);
   }
 
+  function refreshTileForUser(userId) {
+    const tile = qs('#tile-' + userId);
+    if (!tile) return;
+    const nameEl = tile.querySelector('.voice-tile__name span:last-child');
+    const miniAvatarEl = tile.querySelector('.voice-tile__mini-avatar');
+    const fallbackAvatarEl = tile.querySelector('.voice-tile__fallback-avatar');
+    if (nameEl) nameEl.textContent = labelFor(userId);
+    applyMiniAvatar(miniAvatarEl, userId);
+    if (tile.classList.contains('no-video')) applyFallbackAvatar(fallbackAvatarEl, userId);
+  }
+
   function renderTile(userId, stream, label, isLocal, kindTag) {
     let tile = qs('#tile-' + userId);
     if (!tile) {
@@ -256,7 +267,14 @@ const OBUNTO_VOICE = (() => {
   }
 
   function registerProfile(userId, profile) {
-    if (profile) peerProfiles.set(userId, profile);
+    if (!profile) return;
+    if (myProfile && userId === myProfile.id) {
+      myProfile = Object.assign({}, myProfile, profile);
+      OBUNTO_STORE.save(myProfile);
+      OBUNTO_PROFILE.renderChrome(myProfile);
+    } else {
+      peerProfiles.set(userId, profile);
+    }
   }
 
   function localLabel(suffix) {
@@ -306,16 +324,8 @@ const OBUNTO_VOICE = (() => {
     });
 
     OBUNTO_SIGNAL.on('profile-updated', msg => {
-      if (msg.roomId !== currentRoomId) return;
       registerProfile(msg.userId, msg.profile);
-      const tile = qs('#tile-' + msg.userId);
-      if (!tile) return;
-      const nameEl = tile.querySelector('.voice-tile__name span:last-child');
-      const miniAvatarEl = tile.querySelector('.voice-tile__mini-avatar');
-      const fallbackAvatarEl = tile.querySelector('.voice-tile__fallback-avatar');
-      if (nameEl) nameEl.textContent = labelFor(msg.userId);
-      applyMiniAvatar(miniAvatarEl, msg.userId);
-      if (tile.classList.contains('no-video')) applyFallbackAvatar(fallbackAvatarEl, msg.userId);
+      refreshTileForUser(msg.userId);
     });
 
     OBUNTO_RTC.onTrack((userId, stream, kind) => {
@@ -327,6 +337,9 @@ const OBUNTO_VOICE = (() => {
 
   async function joinChannel(channel) {
     if (currentChannel) await leaveChannel();
+
+    const granted = await OBUNTO_PERMISSION.mic();
+    if (!granted) return;
 
     currentChannel = channel;
     currentRoomId = 'voice:' + channel.id;
@@ -366,6 +379,9 @@ const OBUNTO_VOICE = (() => {
     }
     qsa('.voice-tile.is-expanded').forEach(t => t.classList.remove('is-expanded'));
 
+    const channelItem = qs('#voice-channels .channel-item[data-channel-id="' + currentChannel.id + '"]');
+    if (channelItem) channelItem.classList.remove('is-active');
+
     OBUNTO_SIGNAL.leave(currentRoomId);
     OBUNTO_RTC.closeAll();
 
@@ -404,6 +420,8 @@ const OBUNTO_VOICE = (() => {
     const btn = qs('#btn-video');
 
     if (!sharingCam) {
+      const granted = await OBUNTO_PERMISSION.camera();
+      if (!granted) return;
       try {
         camStream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 } });
       } catch (e) {
@@ -428,6 +446,8 @@ const OBUNTO_VOICE = (() => {
     const btn = qs('#btn-screen');
 
     if (!sharingScreen) {
+      const granted = await OBUNTO_PERMISSION.screen();
+      if (!granted) return;
       try {
         screenStream = await navigator.mediaDevices.getDisplayMedia({
           video: true,

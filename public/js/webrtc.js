@@ -1,6 +1,7 @@
 const OBUNTO_RTC = (() => {
   const peers = new Map();
   const remoteStreams = new Map();
+  const audioMixers = new Map();
   let localStream = null;
   let currentRoomId = null;
   const onTrackHandlers = [];
@@ -68,19 +69,61 @@ const OBUNTO_RTC = (() => {
     return stream;
   }
 
-  function attachRemoteTrack(userId, track) {
-    const stream = combinedStream(userId);
-    if (track.kind === 'video') {
-      stream.getTracks().filter(t => t.kind === 'video').forEach(t => stream.removeTrack(t));
+  function getAudioMixer(userId) {
+    let mixer = audioMixers.get(userId);
+    if (!mixer) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      const ctx = new AudioCtx();
+      const dest = ctx.createMediaStreamDestination();
+      mixer = { ctx, dest, sources: new Map() };
+      audioMixers.set(userId, mixer);
     }
+    return mixer;
+  }
+
+  function attachRemoteAudioTrack(userId, track) {
+    const stream = combinedStream(userId);
+    const mixer = getAudioMixer(userId);
+
+    const sourceStream = new MediaStream([track]);
+    const sourceNode = mixer.ctx.createMediaStreamSource(sourceStream);
+    sourceNode.connect(mixer.dest);
+    mixer.sources.set(track, sourceNode);
+
+    const mergedTrack = mixer.dest.stream.getAudioTracks()[0];
+    stream.getTracks().filter(t => t.kind === 'audio' && t !== mergedTrack).forEach(t => stream.removeTrack(t));
+    if (stream.getTracks().indexOf(mergedTrack) === -1) stream.addTrack(mergedTrack);
+
+    onTrackHandlers.forEach(fn => fn(userId, stream, 'audio'));
+
+    track.addEventListener('ended', () => {
+      const node = mixer.sources.get(track);
+      if (node) {
+        node.disconnect();
+        mixer.sources.delete(track);
+      }
+    });
+  }
+
+  function attachRemoteVideoTrack(userId, track) {
+    const stream = combinedStream(userId);
+    stream.getTracks().filter(t => t.kind === 'video').forEach(t => stream.removeTrack(t));
     stream.addTrack(track);
-    onTrackHandlers.forEach(fn => fn(userId, stream, track.kind));
+    onTrackHandlers.forEach(fn => fn(userId, stream, 'video'));
 
     track.addEventListener('ended', () => {
       if (stream.getTracks().indexOf(track) === -1) return;
       stream.removeTrack(track);
-      onTrackHandlers.forEach(fn => fn(userId, stream, track.kind));
+      onTrackHandlers.forEach(fn => fn(userId, stream, 'video'));
     });
+  }
+
+  function attachRemoteTrack(userId, track) {
+    if (track.kind === 'video') {
+      attachRemoteVideoTrack(userId, track);
+    } else {
+      attachRemoteAudioTrack(userId, track);
+    }
   }
 
   function createPeer(userId, isInitiator) {
@@ -161,6 +204,16 @@ const OBUNTO_RTC = (() => {
     }
   }
 
+  function teardownAudioMixer(userId) {
+    const mixer = audioMixers.get(userId);
+    if (!mixer) return;
+    mixer.sources.forEach(node => node.disconnect());
+    mixer.sources.clear();
+    mixer.dest.disconnect();
+    mixer.ctx.close().catch(() => {});
+    audioMixers.delete(userId);
+  }
+
   function removePeer(userId) {
     const pc = peers.get(userId);
     if (pc) {
@@ -168,6 +221,7 @@ const OBUNTO_RTC = (() => {
       peers.delete(userId);
     }
     remoteStreams.delete(userId);
+    teardownAudioMixer(userId);
     onLeaveHandlers.forEach(fn => fn(userId));
   }
 
@@ -175,6 +229,7 @@ const OBUNTO_RTC = (() => {
     peers.forEach(pc => pc.close());
     peers.clear();
     remoteStreams.clear();
+    Array.from(audioMixers.keys()).forEach(teardownAudioMixer);
   }
 
   function onTrack(fn) {
