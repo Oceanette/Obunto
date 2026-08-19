@@ -78,6 +78,7 @@ const OBUNTO_RTC = (() => {
       mixer = { ctx, dest, sources: new Map() };
       audioMixers.set(userId, mixer);
     }
+    if (mixer.ctx.state === 'suspended') mixer.ctx.resume().catch(() => {});
     return mixer;
   }
 
