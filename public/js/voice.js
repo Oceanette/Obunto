@@ -428,19 +428,25 @@ if (!showVideo) {
     const btn = qs('#btn-screen');
 
     if (!sharingScreen) {
+      const constraints = {
+        video: {
+          frameRate: { ideal: 24, max: 30 },
+          width: { ideal: 1920, max: 1920 },
+          height: { ideal: 1080, max: 1080 }
+        },
+        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+      };
       try {
-        screenStream = await navigator.mediaDevices.getDisplayMedia({
-          video: true,
-          audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
-        });
+        screenStream = await navigator.mediaDevices.getDisplayMedia(constraints);
       } catch (e) {
         try {
-          screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+          screenStream = await navigator.mediaDevices.getDisplayMedia({ video: constraints.video });
         } catch (e2) {
           return;
         }
       }
       const videoTrack = screenStream.getVideoTracks()[0];
+      videoTrack.contentHint = 'motion';
       OBUNTO_RTC.addTrack(videoTrack, screenStream);
       const screenAudioTrack = screenStream.getAudioTracks()[0];
       if (screenAudioTrack) OBUNTO_RTC.addTrack(screenAudioTrack, screenStream);

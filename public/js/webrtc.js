@@ -42,9 +42,21 @@ const OBUNTO_RTC = (() => {
     });
   }
 
+  function applyVideoSenderParams(sender, maxBitrateKbps) {
+    if (!sender) return;
+    const params = sender.getParameters();
+    if (!params.encodings || !params.encodings.length) params.encodings = [{}];
+    params.encodings[0].maxBitrate = (maxBitrateKbps || 2000) * 1000;
+    params.degradationPreference = 'maintain-framerate';
+    sender.setParameters(params).catch(() => {});
+  }
+
   function addTrack(track, stream) {
     extraTracks.set(track, stream);
-    peers.forEach(pc => pc.addTrack(track, stream));
+    peers.forEach(pc => {
+      const sender = pc.addTrack(track, stream);
+      if (track.kind === 'video') applyVideoSenderParams(sender, 2000);
+    });
   }
 
   function removeTrackByKind(kind) {
@@ -200,7 +212,8 @@ const OBUNTO_RTC = (() => {
       localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
     }
     extraTracks.forEach((stream, track) => {
-      pc.addTrack(track, stream);
+      const sender = pc.addTrack(track, stream);
+      if (track.kind === 'video') applyVideoSenderParams(sender, 2000);
     });
 
     pc.onicecandidate = e => {
