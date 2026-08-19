@@ -79,9 +79,13 @@ const OBUNTO_SERVERS = (() => {
     renderChannelLists();
   }
 
+  function deactivateVoiceChannels() {
+    qsa('#voice-channels .channel-item').forEach(el => el.classList.remove('is-active'));
+  }
+
   function init() {
     renderAll();
   }
 
-  return { init, getActiveServer };
+  return { init, getActiveServer, deactivateVoiceChannels };
 })();

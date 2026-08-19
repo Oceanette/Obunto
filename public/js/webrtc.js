@@ -3,10 +3,21 @@ const OBUNTO_RTC = (() => {
   const remoteStreams = new Map();
   const audioRegistry = new Map();
   const extraTracks = new Map();
+  const pendingAudioContexts = new Set();
   let localStream = null;
   let currentRoomId = null;
   const onTrackHandlers = [];
   const onLeaveHandlers = [];
+
+  function unlockPendingAudioContexts() {
+    pendingAudioContexts.forEach(ctx => {
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+    });
+  }
+
+  ['click', 'keydown', 'touchstart'].forEach(evt => {
+    document.addEventListener(evt, unlockPendingAudioContexts, { passive: true });
+  });
 
   function setRoom(roomId) {
     currentRoomId = roomId;
@@ -89,6 +100,7 @@ const OBUNTO_RTC = (() => {
     entry.mixer.sources.forEach(node => node.disconnect());
     entry.mixer.sources.clear();
     entry.mixer.dest.disconnect();
+    pendingAudioContexts.delete(entry.mixer.ctx);
     entry.mixer.ctx.close().catch(() => {});
     entry.mixer = null;
   }
@@ -118,6 +130,7 @@ const OBUNTO_RTC = (() => {
       const ctx = new AudioCtx();
       const dest = ctx.createMediaStreamDestination();
       entry.mixer = { ctx, dest, sources: new Map() };
+      pendingAudioContexts.add(ctx);
     }
     if (entry.mixer.ctx.state === 'suspended') entry.mixer.ctx.resume().catch(() => {});
 
