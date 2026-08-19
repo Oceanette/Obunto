@@ -203,13 +203,11 @@ const OBUNTO_VOICE = (() => {
     if (kindTag) tagEl.textContent = kindTag;
 
     const showVideo = hasLiveVideo(stream);
-    tile.classList.toggle('no-video', !showVideo);
-    if (showVideo) {
-      videoEl.srcObject = stream;
-    } else {
-      videoEl.srcObject = null;
-      applyFallbackAvatar(fallbackAvatarEl, userId);
-    }
+tile.classList.toggle('no-video', !showVideo);
+videoEl.srcObject = stream;
+if (!showVideo) {
+  applyFallbackAvatar(fallbackAvatarEl, userId);
+}
 
     if (isLocal) {
       videoEl.muted = true;
